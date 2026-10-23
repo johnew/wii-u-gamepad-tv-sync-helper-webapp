@@ -25,7 +25,7 @@ function CodeSymbols({ code, size }: { code: Code; size: 'lg' | 'sm' }) {
 function App() {
   const { progress, triedSet, goTo, markTriedAndNext, back, toggleTried, markFound, clearFound, reset } =
     useProgress(TOTAL)
-  const [hideTried, setHideTried] = useState(false)
+  const [hideTried, setHideTried] = useState(true)
   const [keepAwake, setKeepAwake] = useState(true)
   const wakeLock = useWakeLock(keepAwake)
   const guidedRef = useRef<HTMLElement>(null)
