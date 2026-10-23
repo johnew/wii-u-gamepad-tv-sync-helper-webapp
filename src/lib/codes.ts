@@ -28,6 +28,16 @@ export function generateCodes(length: number = CODE_LENGTH): Code[] {
 
 export const ALL_CODES: readonly Code[] = generateCodes()
 
+export const CODE_COUNT = ALL_CODES.length
+
+export function isCodeIndex(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < CODE_COUNT
+}
+
+export function clampCodeIndex(index: number): number {
+  return Math.max(0, Math.min(CODE_COUNT - 1, index))
+}
+
 export function codeToString(code: Code): string {
   return code.map((s) => s.symbol).join(' ')
 }

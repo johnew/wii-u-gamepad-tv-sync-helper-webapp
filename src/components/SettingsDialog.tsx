@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import { backupFileName, createBackup, parseBackup, type Progress } from './backup'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { BACKUP_MIME_TYPE, backupFileName, parseBackup, serializeBackup } from '../lib/backup'
+import { downloadFile } from '../lib/browser'
+import { cx } from '../lib/cx'
+import type { Progress } from '../lib/progress'
 
 interface Props {
   open: boolean
@@ -16,6 +19,9 @@ export function SettingsDialog({ open, onClose, progress, onImport }: Props) {
   const [pasted, setPasted] = useState('')
   const [status, setStatus] = useState<Status>(null)
 
+  const succeed = (text: string) => setStatus({ kind: 'ok', text })
+  const fail = (text: string) => setStatus({ kind: 'error', text })
+
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -27,27 +33,27 @@ export function SettingsDialog({ open, onClose, progress, onImport }: Props) {
     }
   }, [open])
 
-  const backupJson = () => JSON.stringify(createBackup(progress), null, 2)
+  // Not every browser closes a modal <dialog> on Escape, so handle it explicitly
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open, onClose])
 
   function handleDownload() {
-    const blob = new Blob([backupJson()], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = backupFileName()
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-    setStatus({ kind: 'ok', text: 'Backup downloaded.' })
+    downloadFile(backupFileName(), serializeBackup(progress), BACKUP_MIME_TYPE)
+    succeed('Backup downloaded.')
   }
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(backupJson())
-      setStatus({ kind: 'ok', text: 'Backup copied to clipboard.' })
+      await navigator.clipboard.writeText(serializeBackup(progress))
+      succeed('Backup copied to clipboard.')
     } catch {
-      setStatus({ kind: 'error', text: 'Could not access the clipboard. Use Download instead.' })
+      fail('Could not access the clipboard. Use Download instead.')
     }
   }
 
@@ -56,7 +62,7 @@ export function SettingsDialog({ open, onClose, progress, onImport }: Props) {
     try {
       next = parseBackup(text)
     } catch (e) {
-      setStatus({ kind: 'error', text: (e as Error).message })
+      fail((e as Error).message)
       return
     }
     const message =
@@ -65,14 +71,14 @@ export function SettingsDialog({ open, onClose, progress, onImport }: Props) {
     if (!window.confirm(message)) return
     onImport(next)
     setPasted('')
-    setStatus({ kind: 'ok', text: `Imported ${next.tried.length} tried codes.` })
+    succeed(`Imported ${next.tried.length} tried codes.`)
   }
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
+    // Clear so selecting the same file again still fires onChange
     e.target.value = ''
-    if (!file) return
-    importText(await file.text())
+    if (file) importText(await file.text())
   }
 
   return (
@@ -99,7 +105,7 @@ export function SettingsDialog({ open, onClose, progress, onImport }: Props) {
           <p className="muted">
             Save a backup of the codes you've tried ({progress.tried.length}) as a JSON file.
           </p>
-          <div className="settings-actions">
+          <div className="actions actions-start">
             <button className="primary" onClick={handleDownload}>
               Download backup
             </button>
@@ -110,12 +116,12 @@ export function SettingsDialog({ open, onClose, progress, onImport }: Props) {
         <section>
           <h3>Import progress</h3>
           <p className="muted">Restore from a backup. This replaces your current progress.</p>
-          <div className="settings-actions">
+          <div className="actions actions-start">
             <button onClick={() => fileRef.current?.click()}>Import from file…</button>
             <input
               ref={fileRef}
               type="file"
-              accept=".json,application/json"
+              accept={`.json,${BACKUP_MIME_TYPE}`}
               onChange={handleFile}
               hidden
             />
@@ -131,7 +137,7 @@ export function SettingsDialog({ open, onClose, progress, onImport }: Props) {
             placeholder='{"app": "wiiu-sync-helper", ...}'
             spellCheck={false}
           />
-          <div className="settings-actions">
+          <div className="actions actions-start">
             <button onClick={() => importText(pasted)} disabled={!pasted.trim()}>
               Import pasted JSON
             </button>
@@ -139,7 +145,7 @@ export function SettingsDialog({ open, onClose, progress, onImport }: Props) {
         </section>
 
         {status && (
-          <p className={`settings-status ${status.kind}`} role="status">
+          <p className={cx('settings-status', status.kind)} role="status">
             {status.text}
           </p>
         )}

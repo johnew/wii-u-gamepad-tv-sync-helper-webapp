@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 
+const isSupported = 'wakeLock' in navigator
+
 /** Keeps the screen awake while the page is visible (where the Screen Wake Lock API is supported). */
 export function useWakeLock(enabled: boolean) {
-  const supported = typeof navigator !== 'undefined' && 'wakeLock' in navigator
   const [active, setActive] = useState(false)
 
   useEffect(() => {
-    if (!supported || !enabled) return
+    if (!isSupported || !enabled) return
     let sentinel: WakeLockSentinel | null = null
     let cancelled = false
 
@@ -40,7 +41,7 @@ export function useWakeLock(enabled: boolean) {
       sentinel = null
       setActive(false)
     }
-  }, [supported, enabled])
+  }, [enabled])
 
-  return { supported, active }
+  return { supported: isSupported, active }
 }

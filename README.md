@@ -24,6 +24,16 @@ npm run lint     # oxlint
 npm run build    # production build to dist/
 ```
 
+## Project structure
+
+```
+src/
+  lib/         Pure, unit-tested logic (codes, progress reducer, backup format, helpers)
+  hooks/       React hooks (persisted progress, keyboard shortcuts, screen wake lock)
+  components/  UI components (guided card, code grid, settings dialog, …)
+  App.tsx      Composes the page
+```
+
 ## Deploying to GitHub Pages
 
 The workflow in [.github/workflows/deploy.yml](.github/workflows/deploy.yml) lints, tests, builds, and deploys the app every time you push to `main`.

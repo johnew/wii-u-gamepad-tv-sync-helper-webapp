@@ -181,7 +181,8 @@ kbd {
 }
 
 .progress-header,
-.list-header {
+.list-header,
+.settings-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -334,12 +335,6 @@ footer {
   padding: 1rem 1.25rem 1.25rem;
 }
 
-.settings-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .settings-header h2 {
   margin: 0;
   font-size: 1.3rem;
@@ -361,14 +356,12 @@ footer {
   font-size: 0.9rem;
 }
 
-.settings-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.actions-start {
+  justify-content: flex-start;
   margin: 0.5rem 0;
 }
 
-.settings-actions .primary {
+.actions-start .primary {
   font-size: 1rem;
   padding: 0.6rem 1.1rem;
 }

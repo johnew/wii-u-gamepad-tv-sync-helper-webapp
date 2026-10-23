@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { backupFileName, createBackup, parseBackup, sanitizeProgress } from './backup'
+import { backupFileName, createBackup, parseBackup } from './backup'
 
 describe('createBackup / parseBackup', () => {
   it('round-trips progress', () => {
@@ -42,16 +42,5 @@ describe('createBackup / parseBackup', () => {
 
   it('builds a dated file name', () => {
     expect(backupFileName(new Date('2026-10-23T10:00:00Z'))).toBe('wiiu-sync-progress-2026-10-23.json')
-  })
-})
-
-describe('sanitizeProgress', () => {
-  it('falls back to defaults for garbage', () => {
-    expect(sanitizeProgress(null)).toEqual({ current: 0, tried: [], found: null })
-    expect(sanitizeProgress({ current: 'x', tried: [1, 'a', 999], found: 1.5 })).toEqual({
-      current: 0,
-      tried: [1],
-      found: null,
-    })
   })
 })
