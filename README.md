@@ -2,6 +2,8 @@
 
 A small React + TypeScript web app for syncing a Wii U GamePad when you **can't see the TV**, for example because the HDMI port is broken.
 
+The webapp is available here: https://johnew.github.io/wii-u-gamepad-tv-sync-helper-webapp/ 
+
 When you sync a GamePad, the console shows a 4-symbol code made of ♠ ♥ ♦ ♣ on the TV, and you enter it on the GamePad. Without a picture, the only option is to try all **4⁴ = 256** combinations. This app takes you through them one at a time.
 
 ## Features
