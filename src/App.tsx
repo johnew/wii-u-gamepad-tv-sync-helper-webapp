@@ -1,9 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ALL_CODES, codeToNames, codeToString, type Code } from './codes'
 import { useProgress } from './useProgress'
+import { useWakeLock } from './useWakeLock'
 import './App.css'
 
 const TOTAL = ALL_CODES.length
+
+function haptic() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(15)
+}
 
 function CodeSymbols({ code, size }: { code: Code; size: 'lg' | 'sm' }) {
   return (
@@ -21,6 +26,19 @@ function App() {
   const { progress, triedSet, goTo, markTriedAndNext, back, toggleTried, markFound, clearFound, reset } =
     useProgress(TOTAL)
   const [hideTried, setHideTried] = useState(false)
+  const [keepAwake, setKeepAwake] = useState(true)
+  const wakeLock = useWakeLock(keepAwake)
+  const guidedRef = useRef<HTMLElement>(null)
+
+  const next = useCallback(() => {
+    haptic()
+    markTriedAndNext()
+  }, [markTriedAndNext])
+
+  function jumpTo(index: number) {
+    goTo(index)
+    guidedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const { current, found } = progress
   const currentCode = ALL_CODES[current]
@@ -34,7 +52,7 @@ function App() {
       if (target && ['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'].includes(target.tagName)) return
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
         e.preventDefault()
-        markTriedAndNext()
+        next()
       } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
         e.preventDefault()
         back()
@@ -42,7 +60,7 @@ function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [found, markTriedAndNext, back])
+  }, [found, next, back])
 
   function handleReset() {
     if (window.confirm('Reset all progress? This clears every tried code.')) reset()
@@ -73,27 +91,33 @@ function App() {
           </div>
         </section>
       ) : (
-        <section className="card guided" aria-live="polite">
+        <section className="card guided" aria-live="polite" ref={guidedRef}>
           <p className="counter">
             Code <strong>{current + 1}</strong> / {TOTAL}
             {triedSet.has(current) && <span className="badge">already tried</span>}
           </p>
           <CodeSymbols code={currentCode} size="lg" />
           <p className="muted names">{codeToNames(currentCode)}</p>
-          <div className="actions">
-            <button onClick={back} disabled={current === 0}>
+          <div className="actions guided-actions">
+            <button className="back-btn" onClick={back} disabled={current === 0}>
               ← Back
             </button>
-            <button className="primary" onClick={markTriedAndNext}>
+            <button className="primary next-btn" onClick={next}>
               Didn't work → Next
             </button>
-            <button className="success-btn" onClick={markFound}>
+            <button className="success-btn found-btn" onClick={markFound}>
               It worked! 🎉
             </button>
           </div>
-          <p className="hint">
+          <p className="hint keyboard-hint">
             Keyboard: <kbd>Space</kbd>/<kbd>Enter</kbd>/<kbd>→</kbd> next, <kbd>←</kbd> back
           </p>
+          {wakeLock.supported && (
+            <label className="hint wake-toggle">
+              <input type="checkbox" checked={keepAwake} onChange={(e) => setKeepAwake(e.target.checked)} />{' '}
+              Keep screen on{keepAwake && wakeLock.active ? ' (active)' : ''}
+            </label>
+          )}
         </section>
       )}
 
@@ -160,16 +184,18 @@ function App() {
               .join(' ')
             return (
               <li key={i} className={classes}>
-                <button className="cell-jump" onClick={() => goTo(i)} title={`Go to ${codeToString(code)}`}>
+                <button className="cell-jump" onClick={() => jumpTo(i)} title={`Go to ${codeToString(code)}`}>
                   <span className="cell-num">{i + 1}</span>
                   <CodeSymbols code={code} size="sm" />
                 </button>
-                <input
-                  type="checkbox"
-                  checked={tried}
-                  onChange={() => toggleTried(i)}
-                  aria-label={`Mark code ${i + 1} as tried`}
-                />
+                <label className="cell-check">
+                  <input
+                    type="checkbox"
+                    checked={tried}
+                    onChange={() => toggleTried(i)}
+                    aria-label={`Mark code ${i + 1} as tried`}
+                  />
+                </label>
               </li>
             )
           })}
