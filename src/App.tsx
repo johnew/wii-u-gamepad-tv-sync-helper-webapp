@@ -3,6 +3,7 @@ import { CODE_COUNT } from './lib/codes'
 import { haptic } from './lib/browser'
 import { useProgress } from './hooks/useProgress'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { useCooldown } from './hooks/useCooldown'
 import { CodeGrid } from './components/CodeGrid'
 import { FoundCard } from './components/FoundCard'
 import { GuidedCard } from './components/GuidedCard'
@@ -18,14 +19,20 @@ function App() {
   const closeSettings = useCallback(() => setSettingsOpen(false), [])
   const guidedRef = useRef<HTMLElement>(null)
 
-  const next = useCallback(() => {
-    haptic()
-    actions.next()
-  }, [actions])
+  const withCooldown = useCooldown()
+  const next = useMemo(
+    () =>
+      withCooldown(() => {
+        haptic()
+        actions.next()
+      }),
+    [withCooldown, actions],
+  )
+  const back = useMemo(() => withCooldown(actions.back), [withCooldown, actions])
 
   const shortcuts = useMemo(
-    () => ({ ' ': next, Enter: next, ArrowRight: next, ArrowLeft: actions.back, Backspace: actions.back }),
-    [next, actions],
+    () => ({ ' ': next, Enter: next, ArrowRight: next, ArrowLeft: back, Backspace: back }),
+    [next, back],
   )
 
   useKeyboardShortcuts(shortcuts, found === null && !settingsOpen)
@@ -68,7 +75,7 @@ function App() {
           ref={guidedRef}
           current={current}
           isTried={triedSet.has(current)}
-          onBack={actions.back}
+          onBack={back}
           onNext={next}
           onFound={actions.markFound}
         />
