@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ALL_CODES, codeToNames, codeToString, type Code } from './codes'
 import { useProgress } from './useProgress'
 import { useWakeLock } from './useWakeLock'
+import { SettingsDialog } from './SettingsDialog'
 import './App.css'
 
 const TOTAL = ALL_CODES.length
@@ -23,10 +24,11 @@ function CodeSymbols({ code, size }: { code: Code; size: 'lg' | 'sm' }) {
 }
 
 function App() {
-  const { progress, triedSet, goTo, markTriedAndNext, back, toggleTried, markFound, clearFound, reset } =
+  const { progress, triedSet, goTo, markTriedAndNext, back, toggleTried, markFound, clearFound, reset, replace } =
     useProgress(TOTAL)
   const [hideTried, setHideTried] = useState(true)
   const [keepAwake, setKeepAwake] = useState(true)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const wakeLock = useWakeLock(keepAwake)
   const guidedRef = useRef<HTMLElement>(null)
 
@@ -47,7 +49,7 @@ function App() {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (found !== null) return
+      if (found !== null || settingsOpen) return
       const target = e.target as HTMLElement | null
       if (target && ['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'].includes(target.tagName)) return
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
@@ -60,7 +62,7 @@ function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [found, next, back])
+  }, [found, settingsOpen, next, back])
 
   function handleReset() {
     if (window.confirm('Reset all progress? This clears every tried code.')) reset()
@@ -68,12 +70,29 @@ function App() {
 
   return (
     <main className="app">
-      <header>
-        <h1>Wii U GamePad Sync Helper</h1>
-        <p className="subtitle">
-          Can't see the sync code on your TV? Try all {TOTAL} combinations, one by one.
-        </p>
+      <header className="app-header">
+        <div>
+          <h1>Wii U GamePad Sync Helper</h1>
+          <p className="subtitle">
+            Can't see the sync code on your TV? Try all {TOTAL} combinations, one by one.
+          </p>
+        </div>
+        <button
+          className="icon-btn settings-btn"
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Settings"
+          title="Settings (backup / restore)"
+        >
+          ⚙
+        </button>
       </header>
+
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        progress={progress}
+        onImport={replace}
+      />
 
       {found !== null ? (
         <section className="card success" aria-live="polite">
@@ -202,7 +221,9 @@ function App() {
         </ul>
       </section>
 
-      <footer className="muted">Progress is saved in your browser.</footer>
+      <footer className="muted">
+        Progress is saved in your browser. Use ⚙ Settings to back it up.
+      </footer>
     </main>
   )
 }

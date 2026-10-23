@@ -9,6 +9,7 @@ When you sync a GamePad, the console shows a 4-symbol code made of ♠ ♥ ♦ �
 - **Guided mode:** shows one large code at a time with *Back*, *Didn't work → Next* and *It worked!* buttons. Keyboard: `Space`/`Enter`/`→` for next, `←` for back.
 - **Full list:** all 256 combinations in a grid. Click one to jump to it, or use its checkbox to mark it tried or untried. You can also hide codes you've already tried.
 - **Progress:** a progress bar, saved in `localStorage`, so closing the tab doesn't lose your place.
+- **Backup and restore:** the ⚙ settings button in the top right lets you export your progress as a JSON file (or copy it to the clipboard) and import it again from a file or pasted JSON. Importing checks the data and asks before it replaces your current progress.
 - **Works on phones:** a large *Next* button, touch targets of at least 44px, no double-tap zoom, safe-area padding for notched phones, and short vibration feedback where the phone supports it. Tapping a code in the list scrolls back up to the current code.
 - **Keeps the screen on** (on browsers that support it), so your phone doesn't lock while you're entering codes on the GamePad.
 - Built-in step-by-step sync instructions.

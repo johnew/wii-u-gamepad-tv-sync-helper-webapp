@@ -1,27 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
+import { EMPTY_PROGRESS, sanitizeProgress, type Progress } from './backup'
 
 const STORAGE_KEY = 'wiiu-sync-helper-progress-v1'
 
-export interface Progress {
-  current: number
-  tried: number[]
-  found: number | null
-}
+export type { Progress }
 
-const initial: Progress = { current: 0, tried: [], found: null }
+const initial: Progress = EMPTY_PROGRESS
 
 function load(total: number): Progress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return initial
-    const parsed = JSON.parse(raw) as Partial<Progress>
-    const inRange = (n: unknown): n is number =>
-      typeof n === 'number' && Number.isInteger(n) && n >= 0 && n < total
-    return {
-      current: inRange(parsed.current) ? parsed.current : 0,
-      tried: Array.isArray(parsed.tried) ? parsed.tried.filter(inRange) : [],
-      found: inRange(parsed.found) ? parsed.found : null,
-    }
+    return raw ? sanitizeProgress(JSON.parse(raw), total) : initial
   } catch {
     return initial
   }
@@ -77,6 +66,8 @@ export function useProgress(total: number) {
 
   const reset = useCallback(() => setProgress(initial), [])
 
+  const replace = useCallback((next: Progress) => setProgress(next), [])
+
   return {
     progress,
     triedSet,
@@ -87,5 +78,6 @@ export function useProgress(total: number) {
     markFound,
     clearFound,
     reset,
+    replace,
   }
 }
