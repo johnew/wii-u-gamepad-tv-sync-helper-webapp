@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const INTERACTIVE_TAGS = new Set(['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'])
+const INTERACTIVE_TAGS = new Set(['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT', 'SUMMARY'])
 
 /**
  * Maps `KeyboardEvent.key` values to handlers on the window.

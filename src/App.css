@@ -42,6 +42,38 @@ header h1 {
   font-size: 1.1rem;
 }
 
+.sync-timer {
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.sync-timer h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.sync-timer p {
+  margin: 0.5rem 0;
+}
+
+.sync-timer .sync-countdown {
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sync-timer-urgent {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.sync-timer button {
+  width: 100%;
+  white-space: normal;
+}
+
 .badge {
   margin-left: 0.5rem;
   font-size: 0.75rem;
@@ -209,13 +241,25 @@ kbd {
   transition: width 0.2s ease;
 }
 
+.instructions {
+  border-color: var(--accent);
+}
+
 .instructions summary {
   cursor: pointer;
   font-weight: 600;
+  min-height: 44px;
+  align-content: center;
+  touch-action: manipulation;
 }
 
-.instructions ol {
+.instructions ol,
+.instructions ul {
   padding-left: 1.25rem;
+}
+
+.instructions li + li {
+  margin-top: 0.5rem;
 }
 
 .grid {

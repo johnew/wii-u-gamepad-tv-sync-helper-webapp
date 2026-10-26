@@ -4,6 +4,7 @@ import { haptic } from './lib/browser'
 import { useProgress } from './hooks/useProgress'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useCooldown } from './hooks/useCooldown'
+import { useSyncTimer } from './hooks/useSyncTimer'
 import { CodeGrid } from './components/CodeGrid'
 import { FoundCard } from './components/FoundCard'
 import { GuidedCard } from './components/GuidedCard'
@@ -18,15 +19,17 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const closeSettings = useCallback(() => setSettingsOpen(false), [])
   const guidedRef = useRef<HTMLElement>(null)
+  const { remaining: syncRemaining, started: syncStarted, start: startSync, canAdvance } = useSyncTimer()
 
   const withCooldown = useCooldown()
   const next = useMemo(
     () =>
       withCooldown(() => {
+        if (!canAdvance()) return
         haptic()
         actions.next()
       }),
-    [withCooldown, actions],
+    [withCooldown, actions, canAdvance],
   )
   const back = useMemo(() => withCooldown(actions.back), [withCooldown, actions])
 
@@ -61,6 +64,8 @@ function App() {
         </button>
       </header>
 
+      <SyncInstructions />
+
       <SettingsDialog
         open={settingsOpen}
         onClose={closeSettings}
@@ -78,12 +83,13 @@ function App() {
           onBack={back}
           onNext={next}
           onFound={actions.markFound}
+          syncRemaining={syncRemaining}
+          syncStarted={syncStarted}
+          onStartSync={startSync}
         />
       )}
 
       <ProgressCard triedCount={triedSet.size} onReset={confirmReset} />
-
-      <SyncInstructions />
 
       <CodeGrid
         current={current}
